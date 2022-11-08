@@ -17,13 +17,11 @@
 #include "glui.h"
 
 
-// title of these windows:
-
-const char *WINDOWTITLE = { "Particle System -- Joe Graphics" };
+// title of these windows
+const char *WINDOWTITLE = { "Particle System -- Grace Todd" };
 const char *GLUITITLE   = { "User Interface Window" };
 
-// random parameters:					
-
+// random parameters
 const float XMIN = 	{ -100.0 };
 const float XMAX = 	{  100.0 };
 const float YMIN = 	{ -100.0 };
@@ -34,68 +32,55 @@ const float RMIN = 	{  2.f };
 const float RMAX = 	{  6.f };
 const float RADIUS = { 3.f };
 const float TMIN = 	{ 0.0 };
-const float TMAX = 	{ 50.0 };
+const float TMAX = 	{ 100.0 };
 const float THETAMIN = 	{ (float)(M_PI)/4.f };
 const float THETAMAX = 	{ 3.f*(float)(M_PI)/4.f };
 const float VELMIN = 	{ 10.f };
 const float VELMAX = 	{ 40.f };
 
-const float NUMFIRES = 	{ 100000 };
+const float NUMFIRES = 	{ 10000 };
 
 const float DT = 	{ 0.030f };
 const float GRAVITY = 	{ -10. };
 
 #define NUMTRACES		30
 
-
-// what the glui package defines as true and false:
-
+// what the glui package defines as true and false
 const int GLUITRUE  = { true  };
 const int GLUIFALSE = { false };
 
-
-// the escape key:
-
+// the escape key
 #define ESCAPE		0x1b
 
+#define NUMPARTICLES	10000
 
-// initial window size:
-
+// initial window size
 const int INIT_WINDOW_SIZE = { 600 };
 
-
-
-// multiplication factors for input interaction:
+// multiplication factors for input interaction
 //  (these are known from previous experience)
-
 const float ANGFACT = { 1. };
 const float SCLFACT = { 0.005f };
 
 
 // able to use the left mouse for either rotation or scaling,
-// in case have only a 2-button mouse:
-
+// in case have only a 2-button mouse
 enum LeftButton
 {
 	ROTATE,
 	SCALE
 };
 
-
-// minimum allowable scale factor:
-
+// minimum allowable scale factor
 const float MINSCALE = { 0.05f };
 
-
-// active mouse buttons (or them together):
-
+// active mouse buttons (or them together)
 const int LEFT   = { 4 };
 const int MIDDLE = { 2 };
 const int RIGHT  = { 1 };
 
 
-// which projection:
-
+// which projection
 enum Projections
 {
 	ORTHO,
@@ -103,8 +88,7 @@ enum Projections
 };
 
 
-// which button:
-
+// which button
 enum ButtonVals
 {
 	GO,
@@ -113,19 +97,16 @@ enum ButtonVals
 };
 
 
-// window background color (rgba):
-
+// window background color (rgba)
 const float BACKCOLOR[] = { 0., 0., 0., 0. };
 
 
-// color and line width for the axes:
-
+// color and line width for the axes
 const GLfloat AXES_COLOR[] = { 1., .5, 0. };
 const GLfloat AXES_WIDTH   = { 3. };
 
 
-// fog parameters:
-
+// fog parameters
 const GLfloat FOGCOLOR[4] = { .0, .0, .0, 1. };
 const GLenum  FOGMODE     = { GL_LINEAR };
 const GLfloat FOGDENSITY  = { 0.30f };
@@ -133,56 +114,61 @@ const GLfloat FOGSTART    = { 1.5 };
 const GLfloat FOGEND      = { 4. };
 
 
-
-
 struct fire
 {
-	float x0, y0, z0;	// starting location	
-	float vx, vy, vz;	// velocity		
-	float t0, t1;		// start, end time	
-	float x, y, z;		// current location	
-	float rad;		// radius		
-	float r, g, b;		// color		
-	int ti;			// trace index	
-	int numt;		// #trace elements that are valid
+	float x0, y0, z0;			// starting location	
+	float vx, vy, vz;			// velocity		
+	float t0, t1;				// start, end time	
+	float x, y, z;				// current location	
+	float rad;					// radius		
+	float r, g, b;				// color		
+	int ti;						// trace index	
+	int numt;					// #trace elements that are valid
 	float tx[NUMTRACES], ty[NUMTRACES], tz[NUMTRACES];	// trace coords
 };
 
 
+struct particle 
+{
+	float x0, y0, z0;			// starting location
+	float vx0, vy0, vz0;		// starting velocity
+	float vx1, vy1, vz1;
+	float r0, g0, b0;			// starting color
+	float birthtime, deathtime;	// birth time, death time
+	float x, y, z;				// current location
+	float vx, vy, vz;			// current velocity
+	float r, g, b;				// current color
+};
+
+struct particle Particles[NUMPARTICLES];
 
 
-//
-// non-constant global variables:
-//
-
+// non-constant global variables
 int	ActiveButton;		// current button that is down
 GLuint	AxesList;		// list to hold the axes
-int	AxesOn;			// ON or OFF
-int	Debug;			// ON means print debug info
-int	DepthCueOn;		// TRUE means to use intensity depth cueing
+int	AxesOn;				// ON or OFF
+int	Debug;				// ON means print debug info
+int	DepthCueOn;			// TRUE means to use intensity depth cueing
 int	DoFan;
-int	DoTraces;		// != 0 means do traces	
+int	DoTraces;			// != 0 means do traces	
 float	Dt;
 struct fire *Fire;		// array of structures	
 GLUI *	Glui;			// instance of glui window
-int	GluiWindow;		// the glut id for the glui window
-int	LeftButton;		// either ROTATE or SCALE
-int	MainWindow;		// window id for main graphics window
-int	NumFires;		// # fires		
+int	GluiWindow;			// the glut id for the glui window
+int	LeftButton;			// either ROTATE or SCALE
+int	MainWindow;			// window id for main graphics window
+int	NumFires;			// # fires		
 int	ParticleList;
 GLfloat	RotMatrix[4][4];	// set by glui rotation widget
 float	Scale, Scale2;		// scaling factors
-float	Time;			// current time		
-int	WhichProjection;	// ORTHO or PERSP
-int	Xmouse, Ymouse;		// mouse values
-float	Xrot, Yrot;		// rotation angles in degrees
+float	Time;				// current time		
+int	WhichProjection;		// ORTHO or PERSP
+int	Xmouse, Ymouse;			// mouse values
+float	Xrot, Yrot;			// rotation angles in degrees
 float	TransXYZ[3];		// set by glui translation widgets
 
 
-//
-// function prototypes:
-//
-
+// function prototypes
 void	Animate( void );
 void	Axes( float );
 void	Buttons( int );
@@ -205,10 +191,7 @@ void	Traces( int );
 void	Visibility( int );
 
 
-//
-// main program:
-//
-
+// main program
 int
 main( int argc, char *argv[] )
 {
@@ -224,10 +207,6 @@ main( int argc, char *argv[] )
 void
 Animate( void )
 {
-	int i;				// counter	
-	struct fire *p;
-	float dt;
-
 	Time += Dt;
 	if( Time > TMAX )
 	{
@@ -238,12 +217,34 @@ Animate( void )
 	// Here is where you advance your particles to reflect the current Time:
 	// ****************************************
 
-	for( i=0, p=Fire; i < NUMFIRES; i++, p++ )
-	{
-		dt = Time - p->t0;
-		//p->x = ???;
-		//p->y = ???;
-		//p->z = ???;
+	for (int i = 0; i < NUMPARTICLES; i++) {
+		if (Particles[i].birthtime <= Time && Time <= Particles[i].deathtime) {
+			float timeInFlight = Time - Particles[i].birthtime;
+	
+			if (Particles[i].birthtime + 5 >= Time) {
+				Particles[i].x = Particles[i].x0;
+				Particles[i].y = Particles[i].y0;
+				Particles[i].z = Particles[i].z0;
+			}
+			else if (Time <= Particles[i].birthtime + 20) {
+				Particles[i].vx = Particles[i].vx0 * timeInFlight;
+				Particles[i].vz = Particles[i].vz0 * timeInFlight;
+				Particles[i].vy = Particles[i].vy0 * timeInFlight;
+
+				Particles[i].x = Particles[i].x0;
+				Particles[i].y = Particles[i].y0 + (10 * timeInFlight);
+				Particles[i].z = Particles[i].z0;
+			}
+			else {		
+				Particles[i].vx = Particles[i].vx1 * timeInFlight;
+				Particles[i].vz = Particles[i].vz1 * timeInFlight;
+				Particles[i].vy = Particles[i].vy1 * timeInFlight;
+
+				Particles[i].x = Particles[i].x + (0.0025 * Particles[i].vx);
+				Particles[i].y = Particles[i].y + (0.0015 * Particles[i].vy);
+				Particles[i].z = Particles[i].z + (0.0025 * Particles[i].vz);
+			}		
+		}
 	}
 
 	glutSetWindow( MainWindow );
@@ -398,12 +399,13 @@ Display( void )
 	glHint( GL_POINT_SMOOTH_HINT, GL_NICEST );
 	glBegin( GL_POINTS );
 
-	for( i=0, p=Fire; i < NumFires; i++, p++ )
+	for( i=0; i < NUMPARTICLES; i++)
 	{
-		if( p->t0 <= Time  &&  Time <= p->t1 )
+		if (Particles[i].birthtime <= Time && Time <= Particles[i].deathtime)
 		{
-			glColor3f( p->r, p->g, p->b );
-			glVertex3f( p->x, p->y, p->z );		}
+			glColor3f(Particles[i].r, Particles[i].g, Particles[i].b);
+			glVertex3f(Particles[i].x, Particles[i].y, Particles[i].z);
+		}
 	}
 
 	glEnd();
@@ -558,11 +560,8 @@ InitGlui( void )
 
 
 
-//
-// initialize the glut and OpenGL libraries:
-//	also setup display lists and callback functions
-//
-
+// initialize the glut and OpenGL libraries
+// also setup display lists and callback functions
 void
 InitGraphics( void )
 {
@@ -570,32 +569,25 @@ InitGraphics( void )
 		fprintf( stderr, "InitGraphics\n" );
 
 
-	// setup the display mode:
+	// setup the display mode
 	// ( *must* be done before call to glutCreateWindow() )
-	// ask for color, double-buffering, and z-buffering:
-
+	// ask for color, double-buffering, and z-buffering
 	glutInitDisplayMode( GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH );
 
 
-	// set the initial window configuration:
-
+	// set the initial window configuration
 	glutInitWindowPosition( 0, 0 );
 	glutInitWindowSize( INIT_WINDOW_SIZE, INIT_WINDOW_SIZE );
 
-
-	// open the window and set its title:
-
+	// open the window and set its title
 	MainWindow = glutCreateWindow( WINDOWTITLE );
 	glutSetWindowTitle( WINDOWTITLE );
 
 
-	// setup the clear values:
-
+	// setup the clear values
 	glClearColor( BACKCOLOR[0], BACKCOLOR[1], BACKCOLOR[2], BACKCOLOR[3] );
 
-
 	// setup the callback routines:
-
 
 	// DisplayFunc -- redraw the window
 	// ReshapeFunc -- handle the user resizing the window
@@ -646,43 +638,46 @@ InitGraphics( void )
 	// Here is where you setup your particle system data structures just once:
 	// ****************************************
 
-	Fire = new struct fire [ NUMFIRES ];
 	int i;
-	struct fire *p;
-	for( i=0, p=Fire; i < NUMFIRES; i++, p++ )
+	for( i=0; i < NUMPARTICLES; i++)
 	{
-		p->x0 = 0.;
-		p->y0 = 0.;
-		p->z0 = 0.;
-		float v = 0.;
-		float th = 0.;
-		p->vx = 0.;
-		p->vy = 0.;
-		p->vz = 0.;
-		p->t0 = 0.;
-		p->t1 = 0.;
-		p->rad = 0.;
-		p->r = 0.;
-		p->g = 0.;
-		p->b = 0.;
-		p->ti = 0;
-		for( int j = 0; j < NUMTRACES; j++ )
-		{
-			p->tx[j] = 0.;
-			p->ty[j] = 0.;
-			p->tz[j] = 0.;
-		}
+		Particles[i].x0 = Ranf(-2., 2.);
+		Particles[i].y0 = Ranf(-4., 4.);
+		Particles[i].z0 = Ranf(-2., 2.);
+
+		Particles[i].vx0 = Ranf(-10., 10.);
+		Particles[i].vy0 = Ranf(0., 30.);
+		Particles[i].vz0 = Ranf(-10., 10.);
+
+		Particles[i].vx1 = Ranf(-10., 10.);
+		Particles[i].vy1 = Ranf(-10., 10.);
+		Particles[i].vz1 = Ranf(-10., 10.);
+
+		Particles[i].r0 = Ranf(0.0, 1.0);
+		Particles[i].g0 = Ranf(0.0, 1.0);
+		Particles[i].b0 = Ranf(0.0, 1.0);
+
+		Particles[i].vx = 0.;
+		Particles[i].vy = 0.;
+		Particles[i].vz = 0.;
+
+		Particles[i].birthtime = 0.;
+		Particles[i].deathtime = 101.;
+
+		Particles[i].r = Particles[i].r0;
+		Particles[i].g = Particles[i].g0;
+		Particles[i].b = Particles[i].b0;
+
+		Particles[i].x = 0.;
+		Particles[i].y = 0.;
+		Particles[i].z = 0.;
 	}
 
 }
 
 
 
-
-//
 // initialize the display lists that will not change:
-//
-
 void
 InitLists( void )
 {
@@ -910,22 +905,21 @@ Reset( void )
 
 	int i;
 	int j;
-	struct fire *p;
-	for( i=0, p=Fire; i < NUMFIRES; i++, p++ )
+	for( i=0; i < NUMPARTICLES; i++)
 	{
-		p->x = p->x0;
-		p->y = p->y0;
-		p->z = p->z0;
-		if( DoTraces )
-		{
-			p->ti = 0;
-			for( j=0; j < NUMTRACES; j++ )
-			{
-				p->tx[j] = p->x;
-				p->ty[j] = p->y;
-				p->tz[j] = p->z;
-			}
-		}
+		Particles[i].x = Particles[i].x0;
+		Particles[i].y = Particles[i].y0;
+		Particles[i].z = Particles[i].z0;
+		//if( DoTraces )
+		//{
+		//	Particles[i].ti = 0;
+		//	for( j=0; j < NUMTRACES; j++ )
+		//	{
+		//		p->tx[j] = p->x;
+		//		p->ty[j] = p->y;
+		//		p->tz[j] = p->z;
+		//	}
+		//}
 	}
 
 	Time = TMIN;
